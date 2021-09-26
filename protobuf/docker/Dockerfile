@@ -40,6 +40,11 @@ ARG PROTOC_GEN_GO_GRPC_VERSION
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${PROTOC_GEN_GO_GRPC_VERSION} \
     && export PATH="$PATH:$(go env GOPATH)/bin"
 
+ARG GRPC_GATEWAY_VERSION
+RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} \
+    && go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v${GRPC_GATEWAY_VERSION} \
+    && export PATH="$PATH:$(go env GOPATH)/bin"
+
 COPY generate-go.sh generate-go.sh
 COPY proto proto
 

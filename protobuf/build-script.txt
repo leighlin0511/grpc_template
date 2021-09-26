@@ -1,2 +1,2 @@
 
-docker build . --target generating --output generated/ -f docker/Dockerfile
+docker build . --target generating --output generated/ -f docker/Dockerfile --no-cache 
