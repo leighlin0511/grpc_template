@@ -1,0 +1,2 @@
+
+docker build . --target generating --output generated/ -f docker/Dockerfile
