@@ -12,6 +12,7 @@ import (
 type RestServer struct {
 	server       *http.Server
 	orderService orderpb.OrderServiceServer // the same order service we injected into the gRPC server
+	errCh        chan error
 }
 
 // NewRestServer is a convenience func to create a RestServer
@@ -24,6 +25,7 @@ func NewRestServer(orderService orderpb.OrderServiceServer, port string) RestSer
 			Handler: router,
 		},
 		orderService: orderService,
+		errCh:        make(chan error, 1),
 	}
 
 	// register routes
@@ -37,8 +39,22 @@ func NewRestServer(orderService orderpb.OrderServiceServer, port string) RestSer
 }
 
 // Start starts the server
-func (r RestServer) Start() error {
-	return r.server.ListenAndServe()
+func (r RestServer) Start() {
+	go func() {
+		if err := r.server.ListenAndServe(); err != nil {
+			r.errCh <- err
+		}
+	}()
+}
+
+// Stop stops the server
+func (r RestServer) Stop() error {
+	return r.server.Close()
+}
+
+// Error returns the server's error channel
+func (r RestServer) Error() chan error {
+	return r.errCh
 }
 
 // create is a handler func that creates an order from an order request (JSON body)
