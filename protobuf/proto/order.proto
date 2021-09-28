@@ -3,23 +3,48 @@ package orders;
 
 option go_package = "service/v1/order;order";
 
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+
 // Order service with CRUD + List rpc method definitions
 service OrderService {
   
   // creates a new order
-  rpc Create (CreateOrderRequest) returns (CreateOrderResponse);
+  rpc Create (CreateOrderRequest) returns (CreateOrderResponse){
+    option (google.api.http) = {
+      post : "/order",
+      body: "*"
+    };
+  };
   
   // retrieves an existing order
-  rpc Retrieve (RetrieveOrderRequest) returns (RetrieveOrderResponse);
+  rpc Retrieve (RetrieveOrderRequest) returns (RetrieveOrderResponse){
+    option (google.api.http) = {
+      get : "/order/{order_id}"
+    };
+  };
   
   // modifies an existing order
-  rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse);
+  rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse){
+    option (google.api.http) = {
+      put : "/order/{order_id}",
+      body: "*"
+    };
+  };;
   
   // cancels an existing order
-  rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse);
+  rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse){
+    option (google.api.http) = {
+      delete : "/order/{order_id}"
+    };
+  };;
   
    // lists existing orders
-  rpc List (ListOrderRequest) returns (ListOrderResponse);
+  rpc List (ListOrderRequest) returns (ListOrderResponse){
+    option (google.api.http) = {
+      get : "/orders"
+    };
+  };
 }
 
 // message containing order details (this is our entity)

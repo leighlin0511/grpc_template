@@ -27,6 +27,7 @@ ARG PROTOC_VERSION
 ENV PROTOC_ZIP=protoc-${PROTOC_VERSION}-linux-x86_64.zip 
 RUN curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/$PROTOC_ZIP \
     && unzip -o $PROTOC_ZIP -d /usr/local bin/protoc \
+    && unzip -o $PROTOC_ZIP -d /usr/local 'include/*' \
     && rm -f $PROTOC_ZIP
 
 ARG GRPC_VERSION
@@ -46,7 +47,9 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
     && export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY generate-go.sh generate-go.sh
+COPY vendor_proto vendor_proto
 COPY proto proto
+ENV LD_LIBRARY_PATH='/usr/lib;/usr/lib64;usr/lib/local'
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p generated && \

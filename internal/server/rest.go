@@ -1,7 +1,9 @@
 package server
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/jsonpb"
@@ -91,5 +93,18 @@ func (r RestServer) delete(c *gin.Context) {
 }
 
 func (r RestServer) list(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
+	for i := 1; i <= 7; i++ {
+		log.Println(i)
+		time.Sleep(time.Second)
+	}
+	orders := make([]*orderpb.Order, 3)
+	for i := 0; i < 3; i++ {
+		order := &orderpb.Order{OrderId: int64(i + 1)}
+		orders[i] = order
+	}
+	resp := &orderpb.ListOrderResponse{Orders: orders}
+	m := &jsonpb.Marshaler{}
+	if err := m.Marshal(c.Writer, resp); err != nil {
+		c.String(http.StatusInternalServerError, "error sending orders response")
+	}
 }
