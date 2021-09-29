@@ -47,9 +47,8 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
     && export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY generate-go.sh generate-go.sh
-COPY vendor_proto vendor_proto
+COPY proto_vendor proto_vendor
 COPY proto proto
-ENV LD_LIBRARY_PATH='/usr/lib;/usr/lib64;usr/lib/local'
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p generated && \
