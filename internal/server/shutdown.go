@@ -55,3 +55,6 @@ func GracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 	}()
 	return wait
 }
+
+// reference
+// https://habibfikri.medium.com/graceful-shutdown-in-go-548fd7d8094c

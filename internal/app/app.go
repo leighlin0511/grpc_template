@@ -92,3 +92,6 @@ func shutdownOperation3() error {
 	time.Sleep(6 * time.Second)
 	return nil
 }
+
+// reference
+// https://levelup.gitconnected.com/the-golang-microservice-toolkit-7521516ee4b
