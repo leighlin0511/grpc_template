@@ -1,0 +1,3 @@
+server:
+  grpcport: 50051
+  httpport: 8080
