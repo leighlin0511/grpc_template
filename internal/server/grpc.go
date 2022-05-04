@@ -3,8 +3,10 @@ package server
 import (
 	"net"
 
-	orderpb "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // GrpcServer implements a gRPC Server for the Order service
@@ -15,13 +17,25 @@ type GrpcServer struct {
 }
 
 // NewGrpcServer is a convenience func to create a GrpcServer
-func NewGrpcServer(service orderpb.OrderServiceServer, port string) (GrpcServer, error) {
+func NewGrpcServer(port string, services ...func(grpc.ServiceRegistrar)) (GrpcServer, error) {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return GrpcServer{}, err
 	}
-	server := grpc.NewServer()
-	orderpb.RegisterOrderServiceServer(server, service)
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			middleware.ChainUnaryServer(
+				grpc_recovery.UnaryServerInterceptor(),
+			),
+		),
+	)
+
+	for _, s := range services {
+		s(server)
+	}
+
+	// use reflection to register service on gRPC server.
+	reflection.Register(server)
 
 	return GrpcServer{
 		server:   server,

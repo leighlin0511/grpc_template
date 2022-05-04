@@ -18,7 +18,7 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer is a convenience func to create a HTTPServer
-func NewHTTPServer(orderService orderpb.OrderServiceServer, port string) HTTPServer {
+func NewHTTPServer(port string, orderService orderpb.OrderServiceServer) HTTPServer {
 	router := gin.Default()
 
 	rs := HTTPServer{

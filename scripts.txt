@@ -1,8 +1,0 @@
-# build script
-go build -o bin/template_server.exe ./cmd/.
-
-# run template_server
-.\bin\template_server.exe run
-
-# test template_server
-curl http://localhost:8080/orders

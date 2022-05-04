@@ -7,7 +7,7 @@ import (
 
 	"github.com/leighlin0511/grpc_template/internal/app/config"
 	"github.com/leighlin0511/grpc_template/internal/server"
-	orderpb "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	"github.com/leighlin0511/grpc_template/pkg/service"
 )
 
 // App is a convenience wrapper for all things needed to start
@@ -34,24 +34,28 @@ func (a App) shutdown() error {
 // this func performs all app related initialization
 func newApp(conf *config.Configuration) (App, error) {
 	ctx := context.Background()
-	orderService := orderpb.UnimplementedOrderServiceServer{}
+
+	orderService, err := service.NewOrderService(conf)
+	if err != nil {
+		return App{}, err
+	}
 
 	gs, err := server.NewGrpcServer(
-		orderService,
 		strconv.Itoa(conf.Server.GrpcPort),
+		orderService.RegisterGRPC,
 	)
 	if err != nil {
 		return App{}, err
 	}
-	wait := server.GracefulShutdown(ctx, 5*time.Second, map[string]server.Operation{
+	wait := server.GracefulShutdown(ctx, conf.Server.ShutdownTimeout, map[string]server.Operation{
 		"operation1": shutdownOperation1,
 		"operation2": shutdownOperation2,
 		"operation3": shutdownOperation3,
 	})
 	return App{
 		httpServer: server.NewHTTPServer(
-			orderService,
 			strconv.Itoa(conf.Server.HTTPPort),
+			orderService,
 		),
 		grpcServer:   gs,
 		shutdownChan: wait,
