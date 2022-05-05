@@ -1,13 +1,26 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/leighlin0511/grpc_template/internal/app/config"
 	orderpb "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+	"google.golang.org/grpc"
+)
+
+const (
+	contentType     = "content-type"
+	grpcContentType = "application/grpc"
 )
 
 // HTTPServer implements a HTTP server for the Order Service
@@ -18,25 +31,28 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer is a convenience func to create a HTTPServer
-func NewHTTPServer(port string, orderService orderpb.OrderServiceServer) HTTPServer {
-	router := gin.Default()
+func NewHTTPServer(ctx context.Context, orderService orderpb.OrderServiceServer, conf *config.Configuration, grpcHandler http.Handler) HTTPServer {
+	gatewaymux := runtime.NewServeMux()
+	portaddr := fmt.Sprintf(":%s", strconv.Itoa(conf.Server.HTTPPort))
 
+	// register http service
+	if err := orderpb.RegisterOrderServiceHandlerFromEndpoint(ctx, gatewaymux, portaddr, []grpc.DialOption{grpc.WithInsecure(), grpc.WithNoProxy()}); err != nil {
+		log.Println("error when register order service http server")
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/template/", gatewaymux)
 	rs := HTTPServer{
 		server: &http.Server{
-			Addr:    ":" + port,
-			Handler: router,
+			Addr:    portaddr,
+			Handler: grpcMessenger(ctx, &conf.Server, grpcHandler, mux),
+			BaseContext: func(_ net.Listener) context.Context {
+				return ctx
+			},
 		},
 		orderService: orderService,
 		errCh:        make(chan error, 1),
 	}
-
-	// register routes
-	router.POST("/order", rs.create)
-	router.GET("/order/:id", rs.retrieve)
-	router.PUT("/order", rs.update)
-	router.DELETE("/order", rs.delete)
-	router.GET("/orders", rs.list)
-
 	return rs
 }
 
@@ -51,7 +67,9 @@ func (r HTTPServer) Start() {
 
 // Stop stops the server
 func (r HTTPServer) Stop() error {
-	return r.server.Close()
+	ctx, cancel := context.WithTimeout(context.TODO(), 300*time.Second)
+	defer cancel()
+	return r.server.Shutdown(ctx)
 }
 
 // Error returns the server's error channel
@@ -59,52 +77,20 @@ func (r HTTPServer) Error() chan error {
 	return r.errCh
 }
 
-// create is a handler func that creates an order from an order request (JSON body)
-func (r HTTPServer) create(c *gin.Context) {
-	var req orderpb.CreateOrderRequest
+func grpcMessenger(ctx context.Context, conf *config.ServerConfig, grpcHandler http.Handler, httpHandler http.Handler) http.Handler {
+	f := func(w http.ResponseWriter, r *http.Request) {
+		ctxTimeout, cancel := context.WithTimeout(ctx, conf.Timeout)
+		defer cancel()
 
-	// unmarshal the order request
-	err := jsonpb.Unmarshal(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "error creating order request")
+		req := r.WithContext(ctxTimeout)
+		contHeader := r.Header.Get(contentType)
+		if r.ProtoMajor == 2 && strings.HasPrefix(contHeader, grpcContentType) {
+			log.Printf("%s: %s, send to gRPC server", contentType, contHeader)
+			grpcHandler.ServeHTTP(w, req)
+		} else {
+			log.Printf("%s: %s, send to HTTP server", contentType, contHeader)
+			httpHandler.ServeHTTP(w, req)
+		}
 	}
-
-	// use the order service to create the order from the req
-	resp, err := r.orderService.Create(c.Request.Context(), &req)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "error creating order")
-	}
-	m := &jsonpb.Marshaler{}
-	if err := m.Marshal(c.Writer, resp); err != nil {
-		c.String(http.StatusInternalServerError, "error sending order response")
-	}
-}
-
-func (r HTTPServer) retrieve(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
-}
-
-func (r HTTPServer) update(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
-}
-
-func (r HTTPServer) delete(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
-}
-
-func (r HTTPServer) list(c *gin.Context) {
-	for i := 1; i <= 7; i++ {
-		log.Println(i)
-		time.Sleep(time.Second)
-	}
-	orders := make([]*orderpb.Order, 3)
-	for i := 0; i < 3; i++ {
-		order := &orderpb.Order{OrderId: int64(i + 1)}
-		orders[i] = order
-	}
-	resp := &orderpb.ListOrderResponse{Orders: orders}
-	m := &jsonpb.Marshaler{}
-	if err := m.Marshal(c.Writer, resp); err != nil {
-		c.String(http.StatusInternalServerError, "error sending orders response")
-	}
+	return h2c.NewHandler(http.HandlerFunc(f), &http2.Server{})
 }

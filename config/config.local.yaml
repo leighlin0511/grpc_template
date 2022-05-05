@@ -1,4 +1,5 @@
 server:
   grpcport: 50051
   httpport: 8080
-  shutdownTimeout: 5s #seconds
+  shutdownTimeout: 30s #seconds
+  timeout: 30s

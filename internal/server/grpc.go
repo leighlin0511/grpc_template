@@ -11,7 +11,7 @@ import (
 
 // GrpcServer implements a gRPC Server for the Order service
 type GrpcServer struct {
-	server   *grpc.Server
+	Server   *grpc.Server
 	listener net.Listener
 	errCh    chan error
 }
@@ -38,7 +38,7 @@ func NewGrpcServer(port string, services ...func(grpc.ServiceRegistrar)) (GrpcSe
 	reflection.Register(server)
 
 	return GrpcServer{
-		server:   server,
+		Server:   server,
 		listener: lis,
 		errCh:    make(chan error, 1),
 	}, nil
@@ -47,7 +47,7 @@ func NewGrpcServer(port string, services ...func(grpc.ServiceRegistrar)) (GrpcSe
 // Start starts the server in the background, pushing any error to the error channel
 func (g GrpcServer) Start() {
 	go func() {
-		if err := g.server.Serve(g.listener); err != nil {
+		if err := g.Server.Serve(g.listener); err != nil {
 			g.errCh <- err
 		}
 	}()
@@ -55,7 +55,7 @@ func (g GrpcServer) Start() {
 
 // Stop stops the gRPC server
 func (g GrpcServer) Stop() {
-	g.server.GracefulStop()
+	g.Server.GracefulStop()
 }
 
 // Error returns the server's error channel

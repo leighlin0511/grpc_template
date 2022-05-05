@@ -57,7 +57,7 @@ message Order {
     DELIVERED = 3;
     CANCELLED = 4;
   }
-  int64 order_id = 1;
+  string order_id = 1;
   repeated Item items = 2;
   float total = 3;
   Status status = 4;

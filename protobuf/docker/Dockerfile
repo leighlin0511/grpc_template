@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:1.3
+# syntax = docker/dockerfile:1.4
 
 ARG PROTOC_VERSION=3.17.3
 ARG GO_VERSION=1.17.1
@@ -44,9 +44,9 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
     && go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v${GRPC_GATEWAY_VERSION} \
     && export PATH="$PATH:$(go env GOPATH)/bin"
 
-COPY generate-go.sh generate-go.sh
-COPY proto_vendor proto_vendor
-COPY proto proto
+COPY ./protobuf/generate-go.sh generate-go.sh
+COPY ./protobuf/proto_vendor proto_vendor
+COPY ./protobuf/proto proto
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p generated && \

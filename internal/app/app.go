@@ -7,6 +7,7 @@ import (
 
 	"github.com/leighlin0511/grpc_template/internal/app/config"
 	"github.com/leighlin0511/grpc_template/internal/server"
+	orderentity "github.com/leighlin0511/grpc_template/pkg/entity/order"
 	"github.com/leighlin0511/grpc_template/pkg/service"
 )
 
@@ -35,7 +36,8 @@ func (a App) shutdown() error {
 func newApp(conf *config.Configuration) (App, error) {
 	ctx := context.Background()
 
-	orderService, err := service.NewOrderService(conf)
+	db := orderentity.NewMemoryDB()
+	orderService, err := service.NewOrderService(conf, db)
 	if err != nil {
 		return App{}, err
 	}
@@ -47,15 +49,17 @@ func newApp(conf *config.Configuration) (App, error) {
 	if err != nil {
 		return App{}, err
 	}
-	wait := server.GracefulShutdown(ctx, conf.Server.ShutdownTimeout, map[string]server.Operation{
+	ctx, wait := server.GracefulShutdown(ctx, conf.Server.ShutdownTimeout, map[string]server.Operation{
 		"operation1": shutdownOperation1,
 		"operation2": shutdownOperation2,
 		"operation3": shutdownOperation3,
 	})
 	return App{
 		httpServer: server.NewHTTPServer(
-			strconv.Itoa(conf.Server.HTTPPort),
+			ctx,
 			orderService,
+			conf,
+			gs.Server,
 		),
 		grpcServer:   gs,
 		shutdownChan: wait,

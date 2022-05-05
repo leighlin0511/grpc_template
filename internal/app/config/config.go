@@ -10,4 +10,5 @@ type ServerConfig struct {
 	GrpcPort        int
 	HTTPPort        int
 	ShutdownTimeout time.Duration
+	Timeout         time.Duration
 }

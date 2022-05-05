@@ -13,8 +13,9 @@ import (
 // clean up operation with server shutdown
 type Operation func() error
 
-func GracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string]Operation) <-chan struct{} {
-	wait := make(chan struct{})
+func GracefulShutdown(ctxBase context.Context, timeout time.Duration, ops map[string]Operation) (ctx context.Context, wait chan struct{}) {
+	wait = make(chan struct{})
+	ctx, cancel := context.WithCancel(ctxBase)
 	go func() {
 		// use buffered channel to prevent memory leak
 		sc := make(chan os.Signal, 1)
@@ -51,9 +52,10 @@ func GracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 			}()
 		}
 		wg.Wait()
+		cancel()
 		close(wait)
 	}()
-	return wait
+	return ctx, wait
 }
 
 // reference
