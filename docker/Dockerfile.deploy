@@ -1,0 +1,8 @@
+FROM --platform=linux/amd64 debian:bullseye-slim
+
+WORKDIR /src
+
+COPY config config
+COPY bin/template-server  template-server
+
+ENTRYPOINT ./template-server run --config=./config/config.local.yaml

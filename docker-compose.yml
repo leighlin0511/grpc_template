@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  template-server:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.deploy
+      

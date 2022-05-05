@@ -1,0 +1,38 @@
+# syntax = docker/dockerfile:1.4
+
+FROM --platform=linux/amd64 golang:1.17.1-buster AS base
+
+USER root
+
+WORKDIR /src
+ENV CGO_ENABLED=1
+
+COPY go.mod go.sum ./
+COPY cmd cmd
+COPY internal internal
+COPY pkg pkg
+COPY vendor vendor
+#RUN go mod vendor
+
+FROM base AS build
+ARG TARTGETOS
+ARG TARGETARCH
+
+RUN --mount=target=. \
+    --mount=type=cache,target=/root/.cache/go-build \
+    GOOS=${TARGETOS} CGO_ENABLED=${CGO_ENABLED} GOARCH=${TARGETARCH} \
+    go build \
+    -o /out/template-server ./cmd
+
+FROM scratch AS bin-unix
+COPY --from=build /out/template-server /
+
+FROM bin-unix AS bin-linux
+FROM bin-unix AS bin-darwin
+
+FROM scratch AS bin-windows
+COPY --from=build /out/template-server /template-server.exe
+
+LABEL maintainer="Leigh Lin leighlin0511@hotmail.com"
+FROM bin-${TARGETOS} AS bin
+
