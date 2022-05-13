@@ -12,7 +12,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/leighlin0511/grpc_template/internal/app/config"
-	orderpb "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	orderpb "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/app"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -41,7 +41,7 @@ func NewHTTPServer(ctx context.Context, orderService orderpb.OrderServiceServer,
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/template/", gatewaymux)
+	mux.Handle("/template/app/", gatewaymux)
 	rs := HTTPServer{
 		server: &http.Server{
 			Addr:    portaddr,

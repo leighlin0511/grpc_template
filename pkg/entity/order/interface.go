@@ -1,7 +1,7 @@
 package order
 
 import (
-	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/app"
 )
 
 type IDatabase interface {

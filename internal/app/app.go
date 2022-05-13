@@ -9,6 +9,7 @@ import (
 	"github.com/leighlin0511/grpc_template/internal/server"
 	orderentity "github.com/leighlin0511/grpc_template/pkg/entity/order"
 	"github.com/leighlin0511/grpc_template/pkg/service"
+	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/app"
 )
 
 // App is a convenience wrapper for all things needed to start
@@ -37,6 +38,11 @@ func newApp(conf *config.Configuration) (App, error) {
 	ctx := context.Background()
 
 	db := orderentity.NewMemoryDB()
+	// mock initilize a list
+	db.Orders = map[string]*orderproto.Order{
+		"001": {OrderId: "001"},
+		"002": {OrderId: "002"},
+	}
 	orderService, err := service.NewOrderService(conf, db)
 	if err != nil {
 		return App{}, err
@@ -89,19 +95,19 @@ func Run(conf *config.Configuration) error {
 
 func shutdownOperation1() error {
 	// mock expensive operation
-	time.Sleep(4 * time.Second)
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
 func shutdownOperation2() error {
 	// mock expensive operation
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 	return nil
 }
 
 func shutdownOperation3() error {
 	// mock expensive operation
-	time.Sleep(6 * time.Second)
+	time.Sleep(3 * time.Second)
 	return nil
 }
 

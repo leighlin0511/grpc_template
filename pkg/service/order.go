@@ -7,7 +7,7 @@ import (
 	"github.com/leighlin0511/grpc_template/internal/app/config"
 	"github.com/leighlin0511/grpc_template/pkg/entity"
 	orderentity "github.com/leighlin0511/grpc_template/pkg/entity/order"
-	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/app"
 	"google.golang.org/grpc"
 )
 
@@ -45,8 +45,14 @@ func (s *SVC) Create(ctx context.Context, req *orderproto.CreateOrderRequest) (*
 }
 
 // retrieves an existing order
-func (s *SVC) Retrieve(context.Context, *orderproto.RetrieveOrderRequest) (*orderproto.RetrieveOrderResponse, error) {
-	return nil, errors.New("not implemented")
+func (s *SVC) Retrieve(ctx context.Context, req *orderproto.RetrieveOrderRequest) (*orderproto.RetrieveOrderResponse, error) {
+	o, err := s.api.db.Retrieve(
+		req.OrderId,
+	)
+	if err != nil {
+		return nil, errors.New("error retrieving")
+	}
+	return &orderproto.RetrieveOrderResponse{Order: o}, nil
 }
 
 // modifies an existing order
@@ -61,5 +67,9 @@ func (s *SVC) Delete(context.Context, *orderproto.DeleteOrderRequest) (*orderpro
 
 // lists existing orders
 func (s *SVC) List(context.Context, *orderproto.ListOrderRequest) (*orderproto.ListOrderResponse, error) {
-	return nil, errors.New("not implemented")
+	os, err := s.api.db.List()
+	if err != nil {
+		return nil, errors.New("error listing")
+	}
+	return &orderproto.ListOrderResponse{Orders: os}, nil
 }

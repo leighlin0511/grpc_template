@@ -1,0 +1,49 @@
+syntax = "proto3";
+package service.app;
+
+option go_package = "service/app;app";
+
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "service/app/types.proto";
+
+// Order service with CRUD + List rpc method definitions
+service OrderService {
+  
+  // creates a new order
+  rpc Create (CreateOrderRequest) returns (CreateOrderResponse){
+    option (google.api.http) = {
+      post : "/template/app/order",
+      body: "*"
+    };
+  };
+  
+  // retrieves an existing order
+  rpc Retrieve (RetrieveOrderRequest) returns (RetrieveOrderResponse){
+    option (google.api.http) = {
+      get : "/template/app/order/{order_id}"
+    };
+  };
+  
+  // modifies an existing order
+  rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse){
+    option (google.api.http) = {
+      put : "/template/app/order/{order_id}",
+      body: "*"
+    };
+  };;
+  
+  // cancels an existing order
+  rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse){
+    option (google.api.http) = {
+      delete : "/template/app/order/{order_id}"
+    };
+  };;
+  
+   // lists existing orders
+  rpc List (ListOrderRequest) returns (ListOrderResponse){
+    option (google.api.http) = {
+      get : "/template/app/orders"
+    };
+  };
+}

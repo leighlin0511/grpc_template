@@ -3,7 +3,7 @@ package order
 import (
 	"errors"
 
-	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/v1/order"
+	orderproto "github.com/leighlin0511/grpc_template/protobuf/generated/pkg/service/app"
 )
 
 type MemDatabase struct {
@@ -32,12 +32,12 @@ func (db *MemDatabase) Retrieve(ID string) (*orderproto.Order, error) {
 	if o, ok := db.Orders[ID]; ok {
 		return o, nil
 	}
-	return nil, errors.New("not found")
+	return nil, errors.New("not found1")
 }
 
 func (db *MemDatabase) Update(o *orderproto.Order) (*orderproto.Order, error) {
 	if _, ok := db.Orders[o.OrderId]; !ok {
-		return nil, errors.New("not found")
+		return nil, errors.New("not found2")
 	}
 	db.Orders[o.OrderId] = o
 	return o, nil
